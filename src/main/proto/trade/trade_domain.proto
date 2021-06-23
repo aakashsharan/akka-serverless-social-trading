@@ -1,0 +1,51 @@
+
+syntax = "proto3";
+
+package com.lightbend.gsa.trade.domain;
+
+option java_outer_classname = "TradeDomain";
+
+import "akkaserverless/annotations.proto";
+
+// describes how this domain relates to an event sourced entity
+option (akkaserverless.file).event_sourced_entity = {
+  name: "TradeEntity"
+  entity_type: "event-sourced-trade"
+  state: "TradeState"
+  events: ["TradeOffered", "TradeAccepted", "TradeRejected"]
+};
+
+// the state of the trade
+message TradeState {
+  string trade_id = 1;
+  string buyer_user_id = 2;
+  string seller_user_id = 3;
+  repeated string buyer_item_ids = 4;
+  repeated string seller_item_ids = 5;
+  int64 trade_offered_timestamp = 6;
+  enum Status {
+    CREATED = 0;
+    ACCEPTED = 1;
+    REJECTED = 2;
+  }
+  Status status = 7;
+}
+
+// trade offered event
+message TradeOffered {
+  string trade_id = 1;
+  string buyer_user_id = 2;
+  string seller_user_id = 3;
+  repeated string buyer_item_ids = 4;
+  repeated string seller_item_ids = 5;
+}
+
+// trade accepted event
+message TradeAccepted {
+  string trade_id = 1;
+}
+
+// trade rejected event
+message TradeRejected {
+  string trade_id = 1;
+}

@@ -1,0 +1,66 @@
+
+syntax = "proto3";
+
+package com.lightbend.gsa.gsa.trade.api;
+
+option java_outer_classname = "TradeApi";
+
+import "akkaserverless/annotations.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+message CreateTradeItem {
+  string trade_id = 1 [(akkaserverless.field).entity_key = true];
+  string buyer_user_id = 2;
+  string seller_user_id = 3;
+  repeated string buyer_item_ids = 4;
+  repeated string seller_item_ids = 5;
+}
+
+message TradeItem {
+  string trade_id = 1 [(akkaserverless.field).entity_key = true];
+}
+
+message Trade {
+  string trade_id = 1;
+  string buyer_user_id = 2;
+  string seller_user_id = 3;
+  repeated string buyer_item_ids = 4;
+  repeated string seller_item_ids = 5;
+  int64 trade_offered_timestamp = 6;
+  enum Status {
+    CREATED = 0;
+    ACCEPTED = 1;
+    REJECTED = 2;
+  }
+  Status status = 7;
+}
+
+service TradeService {
+  option (akkaserverless.service) = {
+    type: SERVICE_TYPE_ENTITY
+    component: ".domain.TradeDomain"
+  };
+
+  rpc CreateTrade(CreateTradeItem) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/trade/{trade_id}/create"
+      body: "*"
+    };
+  }
+
+  rpc AcceptTrade(TradeItem) returns (google.protobuf.Empty) {
+    option (google.api.http).post = "/trade/{trade_id}/accept";
+  }
+
+  rpc RejectTrade(TradeItem) returns (google.protobuf.Empty) {
+    option (google.api.http).post = "/trade/{trade_id}/reject";
+  }
+
+  rpc GetTrade(TradeItem) returns (Trade) {
+    option (google.api.http) = {
+      get: "/trade/{trade_id}"
+      response_body: "trade-data"
+    };
+  }
+}
