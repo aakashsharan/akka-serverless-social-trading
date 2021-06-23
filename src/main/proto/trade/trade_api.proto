@@ -1,7 +1,7 @@
 
 syntax = "proto3";
 
-package com.lightbend.gsa.gsa.trade.api;
+package com.lightbend.gsa.trade.api;
 
 option java_outer_classname = "TradeApi";
 
