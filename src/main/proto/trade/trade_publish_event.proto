@@ -1,0 +1,42 @@
+
+syntax = "proto3";
+
+package com.lightbend.gsa.trade.action;
+
+import "akkaserverless/annotations.proto";
+import "trade/trade_domain.proto";
+
+service PublishEventsToTopicService {
+  rpc PublishCreated(com.lightbend.gsa.trade.domain.TradeOffered) returns (com.lightbend.gsa.trade.domain.TradeOffered) {
+    option (akkaserverless.method).eventing = {
+      in: {
+        event_sourced_entity: "event-sourced-trade"
+      }
+      out: {
+        topic: "stp-trade"
+      }
+    };
+  }
+
+  rpc PublishAccepted(com.lightbend.gsa.trade.domain.TradeAccepted) returns (com.lightbend.gsa.trade.domain.TradeAccepted) {
+    option (akkaserverless.method).eventing = {
+      in: {
+        event_sourced_entity: "event-sourced-trade"
+      }
+      out: {
+        topic: "stp-trade"
+      }
+    };
+  }
+
+  rpc PublishRejected(com.lightbend.gsa.trade.domain.TradeRejected) returns (com.lightbend.gsa.trade.domain.TradeRejected) {
+    option (akkaserverless.method).eventing = {
+      in: {
+        event_sourced_entity: "event-sourced-trade"
+      }
+      out: {
+        topic: "stp-trade"
+      }
+    };
+  }
+}
