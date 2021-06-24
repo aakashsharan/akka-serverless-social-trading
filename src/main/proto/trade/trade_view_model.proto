@@ -1,0 +1,84 @@
+
+syntax = "proto3";
+
+package com.lightbend.gsa.trade.view;
+
+option java_outer_classname = "TradeViewModel";
+
+import "akkaserverless/annotations.proto";
+import "trade/trade_domain.proto";
+import "google/api/annotations.proto";
+
+
+message TradeViewState {
+  string trade_id = 1;
+  string buyer_user_id = 2;
+  string seller_user_id = 3;
+  repeated ItemId buyer_item_ids = 4;
+  repeated ItemId seller_item_ids = 5;
+  int64 trade_offered_timestamp = 6;
+  enum Status {
+    CREATED = 0;
+    ACCEPTED = 1;
+    REJECTED = 2;
+  }
+  Status status = 7;
+}
+
+message ItemId {
+  string item_id = 1;
+}
+
+message TradeId {
+  string trade_id = 1;
+}
+
+message TradeItemView {
+  repeated TradeId id = 1;
+}
+
+message GetUserId {
+  string user_id = 1;
+}
+
+service TradeViewService {
+  rpc ProcessCreated(com.lightbend.gsa.trade.domain.TradeOffered) returns (TradeViewState) {
+    option (akkaserverless.method).eventing.in = {
+      event_sourced_entity: "event-sourced-trade"
+    };
+    option (akkaserverless.method).view.update = {
+      table: "trade_by_user"
+      transform_updates: true
+    };
+  }
+
+  rpc ProcessAccepted(com.lightbend.gsa.trade.domain.TradeAccepted) returns (TradeViewState) {
+    option (akkaserverless.method).eventing.in = {
+      event_sourced_entity: "event-sourced-trade"
+    };
+    option (akkaserverless.method).view.update = {
+      table: "trade_by_user"
+      transform_updates: true
+    };
+  }
+
+  rpc ProcessRejected(com.lightbend.gsa.trade.domain.TradeRejected) returns (TradeViewState) {
+    option (akkaserverless.method).eventing.in = {
+      event_sourced_entity: "event-sourced-trade"
+    };
+    option (akkaserverless.method).view.update = {
+      table: "trade_by_user"
+      transform_updates: true
+    };
+  }
+
+  rpc GetTradeByUserId(GetUserId) returns (TradeViewState) {
+    option (akkaserverless.method).view.query = {
+      query: "select * from trade_by_user where buyer_user_id = :user_id"
+    };
+    option (google.api.http) = {
+      get: "/trades/trade-by-user-id"
+    };
+  }
+}
+
