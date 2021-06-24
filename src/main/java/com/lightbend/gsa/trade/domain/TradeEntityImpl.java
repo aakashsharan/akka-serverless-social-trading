@@ -92,7 +92,7 @@ public class TradeEntityImpl extends TradeEntityInterface {
         TradeDomain.TradeAccepted.Builder bd = TradeDomain.TradeAccepted.newBuilder();
         bd.setTradeId(command.getTradeId());
 
-        ctx.emit(bd);
+        ctx.emit(bd.build());
         return Empty.getDefaultInstance();
     }
     
@@ -106,7 +106,7 @@ public class TradeEntityImpl extends TradeEntityInterface {
         TradeDomain.TradeRejected.Builder bd = TradeDomain.TradeRejected.newBuilder();
         bd.setTradeId(command.getTradeId());
 
-        ctx.emit(bd);
+        ctx.emit(bd.build());
         return Empty.getDefaultInstance();
     }
     
