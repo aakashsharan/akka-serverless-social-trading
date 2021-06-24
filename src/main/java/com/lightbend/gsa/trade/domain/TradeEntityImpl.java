@@ -116,19 +116,19 @@ public class TradeEntityImpl extends TradeEntityInterface {
     @Override
     public void tradeOffered(TradeDomain.TradeOffered event) {
         //throw new RuntimeException("The event handler for `TradeOffered` is not implemented, yet");
-        trade.toBuilder().setStatus(TradeApi.Trade.Status.CREATED);
+        trade = trade.toBuilder().setStatus(TradeApi.Trade.Status.CREATED).build();
     }
     
     @Override
     public void tradeAccepted(TradeDomain.TradeAccepted event) {
         //throw new RuntimeException("The event handler for `TradeAccepted` is not implemented, yet");
-        trade.toBuilder().setStatus(TradeApi.Trade.Status.ACCEPTED);
+        trade = trade.toBuilder().setStatus(TradeApi.Trade.Status.ACCEPTED).build();
     }
     
     @Override
     public void tradeRejected(TradeDomain.TradeRejected event) {
         //throw new RuntimeException("The event handler for `TradeRejected` is not implemented, yet");
-        trade.toBuilder().setStatus(TradeApi.Trade.Status.REJECTED);
+        trade = trade.toBuilder().setStatus(TradeApi.Trade.Status.REJECTED).build();
     }
 
     // convert tradeapi item to tradedomain item
