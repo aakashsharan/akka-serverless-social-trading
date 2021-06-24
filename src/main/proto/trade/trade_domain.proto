@@ -15,13 +15,17 @@ option (akkaserverless.file).event_sourced_entity = {
   events: ["TradeOffered", "TradeAccepted", "TradeRejected"]
 };
 
+message ItemId {
+  string item_id = 1;
+}
+
 // the state of the trade
 message TradeState {
   string trade_id = 1;
   string buyer_user_id = 2;
   string seller_user_id = 3;
-  repeated string buyer_item_ids = 4;
-  repeated string seller_item_ids = 5;
+  repeated ItemId buyer_item_ids = 4;
+  repeated ItemId seller_item_ids = 5;
   int64 trade_offered_timestamp = 6;
   enum Status {
     CREATED = 0;
@@ -36,8 +40,8 @@ message TradeOffered {
   string trade_id = 1;
   string buyer_user_id = 2;
   string seller_user_id = 3;
-  repeated string buyer_item_ids = 4;
-  repeated string seller_item_ids = 5;
+  repeated ItemId buyer_item_ids = 4;
+  repeated ItemId seller_item_ids = 5;
 }
 
 // trade accepted event

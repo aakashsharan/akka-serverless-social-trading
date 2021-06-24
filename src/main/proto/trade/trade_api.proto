@@ -13,20 +13,24 @@ message CreateTradeItem {
   string trade_id = 1 [(akkaserverless.field).entity_key = true];
   string buyer_user_id = 2;
   string seller_user_id = 3;
-  repeated string buyer_item_ids = 4;
-  repeated string seller_item_ids = 5;
+  repeated ItemId buyer_item_ids = 4;
+  repeated ItemId seller_item_ids = 5;
 }
 
 message TradeItem {
   string trade_id = 1 [(akkaserverless.field).entity_key = true];
 }
 
+message ItemId {
+  string item_id = 1;
+}
+
 message Trade {
   string trade_id = 1;
   string buyer_user_id = 2;
   string seller_user_id = 3;
-  repeated string buyer_item_ids = 4;
-  repeated string seller_item_ids = 5;
+  repeated ItemId buyer_item_ids = 4;
+  repeated ItemId seller_item_ids = 5;
   int64 trade_offered_timestamp = 6;
   enum Status {
     CREATED = 0;
@@ -39,7 +43,7 @@ message Trade {
 service TradeService {
   option (akkaserverless.service) = {
     type: SERVICE_TYPE_ENTITY
-    component: ".domain.TradeDomain"
+    component: ".domain.TradeEntity"
   };
 
   rpc CreateTrade(CreateTradeItem) returns (google.protobuf.Empty) {
@@ -60,7 +64,6 @@ service TradeService {
   rpc GetTrade(TradeItem) returns (Trade) {
     option (google.api.http) = {
       get: "/trade/{trade_id}"
-      response_body: "trade-data"
     };
   }
 }
