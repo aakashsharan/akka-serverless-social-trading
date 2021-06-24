@@ -25,77 +25,71 @@ public class TradeEntityImpl extends TradeEntityInterface {
     
     @Override
     public TradeDomain.TradeState snapshot() {
-        // TODO: produce state snapshot here
-        //return TradeDomain.TradeState.newBuilder().build();
-        return convert();
+        LOG.info("Inside `snapshot` method for trade_id: {}", trade.getTradeId());
+        return convert(trade);
     }
     
     @Override
     public void handleSnapshot(TradeDomain.TradeState snapshot) {
-        // TODO: restore state from snapshot here
+        LOG.info("Inside `snapshot handler` method for trade_id: {}", trade.getTradeId());
         this.trade = convert(snapshot);
     }
     
     @Override
     protected Empty createTrade(TradeApi.CreateTradeItem command, CommandContext ctx) {
-        // throw ctx.fail("The command handler for `CreateTrade` is not implemented, yet");
-
+        LOG.info("Inside `createTrade` command for trade_id: {}", command.getTradeId());
         TradeDomain.TradeOffered.Builder bd = TradeDomain.TradeOffered.newBuilder();
+        List<TradeApi.ItemId> apiBuyerList = command.getBuyerItemIdsList();
+        List<TradeApi.ItemId> apiSellerList = command.getSellerItemIdsList();
 
-        List<TradeApi.ItemId> buyerList = command.getBuyerItemIdsList();
-        List<TradeApi.ItemId> sellerList = command.getSellerItemIdsList();
+        List<TradeDomain.ItemId> domainBuyerList = convertApiItem(apiBuyerList);
+        List<TradeDomain.ItemId> domainSellerList = convertApiItem(apiSellerList);
+        bd.addAllBuyerItemIds(domainBuyerList);
+        bd.addAllSellerItemIds(domainSellerList);
+        bd.setTradeId(command.getTradeId());
+        TradeDomain.TradeOffered tradeOffered = bd.build();
 
-        LOG.info("buyer list length: {}", buyerList.size());
-        LOG.info("seller list length: {}", sellerList.size());
-
-        List<TradeDomain.ItemId> newBuyerList = convertItem(buyerList);
-        List<TradeDomain.ItemId> newSellerList = convertItem(sellerList);
-
-        bd.addAllBuyerItemIds(newBuyerList);
-        bd.addAllSellerItemIds(newSellerList);
-
-        TradeDomain.TradeOffered tradeOffered = bd.setTradeId(command.getTradeId())
-                .setBuyerUserId(command.getBuyerUserId())
-                .setSellerUserId(command.getSellerUserId())
-                .build();
-
+        // emit trade offered event
         ctx.emit(tradeOffered);
         return Empty.getDefaultInstance();
     }
     
     @Override
     protected Empty acceptTrade(TradeApi.AcceptTradeItem command, CommandContext ctx) {
-        // throw ctx.fail("The command handler for `AcceptTrade` is not implemented, yet");
         String tradeId = command.getTradeId();
-        LOG.info("Inside createTrade, trade id is: {}", tradeId);
+        LOG.info("Inside `acceptTrade` command for trade_id: {}", tradeId);
         if(trade == null || tradeId.isEmpty() || !trade.getTradeId().equalsIgnoreCase(tradeId)) {
             throw ctx.fail("Cannot accept a trade " + tradeId + " that is invalid!");
         }
 
         TradeDomain.TradeAccepted.Builder bd = TradeDomain.TradeAccepted.newBuilder();
         bd.setTradeId(command.getTradeId());
+        TradeDomain.TradeAccepted tradeAccepted = bd.build();
 
-        ctx.emit(bd.build());
+        // emit trade accepted event
+        ctx.emit(tradeAccepted);
         return Empty.getDefaultInstance();
     }
     
     @Override
     protected Empty rejectTrade(TradeApi.RejectTradeItem command, CommandContext ctx) {
-        // throw ctx.fail("The command handler for `RejectTrade` is not implemented, yet");
         String tradeId = command.getTradeId();
+        LOG.info("Inside `rejectTrade` command for trade_id: {}", tradeId);
         if(trade == null || tradeId.isEmpty() || !trade.getTradeId().equalsIgnoreCase(tradeId)) {
             throw ctx.fail("Cannot reject a trade " + tradeId + " that is invalid!");
         }
         TradeDomain.TradeRejected.Builder bd = TradeDomain.TradeRejected.newBuilder();
         bd.setTradeId(command.getTradeId());
+        TradeDomain.TradeRejected tradeRejected = bd.build();
 
-        ctx.emit(bd.build());
+        // emit trade rejected event
+        ctx.emit(tradeRejected);
         return Empty.getDefaultInstance();
     }
     
     @Override
     protected TradeApi.Trade getTrade(TradeApi.GetTradeItem command, CommandContext ctx) {
-        //throw ctx.fail("The command handler for `GetTrade` is not implemented, yet");
+        LOG.info("Inside `getTrade` command for trade_id: {}", command.getTradeId());
         TradeApi.Trade.Builder bd = TradeApi.Trade.newBuilder();
 
         List<TradeApi.ItemId> buyerList = trade.getBuyerItemIdsList();
@@ -104,35 +98,55 @@ public class TradeEntityImpl extends TradeEntityInterface {
         List<TradeApi.ItemId> newBuyerList = new LinkedList<>(buyerList);
         List<TradeApi.ItemId> newSellerList = new LinkedList<>(sellerList);
         bd.addAllBuyerItemIds(newBuyerList);
-        bd.addAllBuyerItemIds(newSellerList);
+        bd.addAllSellerItemIds(newSellerList);
 
+        // return the items to the client
         return bd.setTradeId(trade.getTradeId())
                 .setBuyerUserId(trade.getBuyerUserId())
                 .setSellerUserId(trade.getSellerUserId())
                 .setStatusValue(trade.getStatusValue())
+                .setTradeOfferedTimestamp(trade.getTradeOfferedTimestamp())
+                .setStatus(trade.getStatus())
                 .build();
     }
     
     @Override
     public void tradeOffered(TradeDomain.TradeOffered event) {
-        //throw new RuntimeException("The event handler for `TradeOffered` is not implemented, yet");
-        trade = trade.toBuilder().setStatus(TradeApi.Trade.Status.CREATED).build();
+        LOG.info("Inside `tradeOffered` event for trade_id: {}", event.getTradeId());
+        trade = TradeApi.Trade.newBuilder().build();
+
+        List<TradeDomain.ItemId> domainBuyerList = event.getBuyerItemIdsList();
+        List<TradeDomain.ItemId> domainSellerList = event.getSellerItemIdsList();
+        List<TradeApi.ItemId> apiBuyerList = convertDomainItem(domainBuyerList);
+        List<TradeApi.ItemId> apiSellerList = convertDomainItem(domainSellerList);
+
+        // update the state of the trade
+        trade = trade.toBuilder().setStatus(TradeApi.Trade.Status.CREATED)
+                .addAllBuyerItemIds(apiBuyerList)
+                .addAllSellerItemIds(apiSellerList)
+                .setTradeId(event.getTradeId())
+                .setBuyerUserId(event.getBuyerUserId())
+                .setSellerUserId(event.getSellerUserId())
+                .setTradeOfferedTimestamp(System.currentTimeMillis())
+                .build();
     }
     
     @Override
     public void tradeAccepted(TradeDomain.TradeAccepted event) {
-        //throw new RuntimeException("The event handler for `TradeAccepted` is not implemented, yet");
+        LOG.info("Inside `tradeAccepted` event for trade_id: {}", event.getTradeId());
+        // update the state of the trade with status accepted
         trade = trade.toBuilder().setStatus(TradeApi.Trade.Status.ACCEPTED).build();
     }
     
     @Override
     public void tradeRejected(TradeDomain.TradeRejected event) {
-        //throw new RuntimeException("The event handler for `TradeRejected` is not implemented, yet");
+        LOG.info("Inside `tradeRejected` event for trade_id: {}", event.getTradeId());
+        // update the state of the trade with status rejected
         trade = trade.toBuilder().setStatus(TradeApi.Trade.Status.REJECTED).build();
     }
 
     // convert tradeapi item to tradedomain item
-    private TradeDomain.TradeState convert() {
+    private TradeDomain.TradeState convert(TradeApi.Trade trade) {
         TradeDomain.TradeState.Builder bd = createBuilder();
 
         return bd.setTradeId(trade.getTradeId())
@@ -148,14 +162,11 @@ public class TradeEntityImpl extends TradeEntityInterface {
         List<TradeApi.ItemId> buyerList = trade.getBuyerItemIdsList();
         List<TradeApi.ItemId> sellerList = trade.getSellerItemIdsList();
 
-        LOG.info("buyer list length: {}", buyerList.size());
-        LOG.info("seller list length: {}", sellerList.size());
-
-        List<TradeDomain.ItemId> newBuyerList = convertItem(buyerList);
-        List<TradeDomain.ItemId> newSellerList = convertItem(sellerList);
-
+        List<TradeDomain.ItemId> newBuyerList = convertApiItem(buyerList);
+        List<TradeDomain.ItemId> newSellerList = convertApiItem(sellerList);
         bd.addAllBuyerItemIds(newBuyerList);
         bd.addAllSellerItemIds(newSellerList);
+
         return bd;
     }
 
@@ -176,18 +187,16 @@ public class TradeEntityImpl extends TradeEntityInterface {
         List<TradeDomain.ItemId> buyerList = trade.getBuyerItemIdsList();
         List<TradeDomain.ItemId> sellerList = trade.getSellerItemIdsList();
 
-        LOG.info("buyer list length: {}", buyerList.size());
-        LOG.info("seller list length: {}", sellerList.size());
-
-        List<TradeApi.ItemId> newBuyerList = convertItemDomain(buyerList);
-        List<TradeApi.ItemId> newSellerList = convertItemDomain(sellerList);
-
+        List<TradeApi.ItemId> newBuyerList = convertDomainItem(buyerList);
+        List<TradeApi.ItemId> newSellerList = convertDomainItem(sellerList);
         bd.addAllBuyerItemIds(newBuyerList);
         bd.addAllSellerItemIds(newSellerList);
+
         return bd;
     }
 
-    private List<TradeDomain.ItemId> convertItem(List<TradeApi.ItemId> list) {
+    // convert list of tradeapi itemid to list of tradedomain itemid
+    private List<TradeDomain.ItemId> convertApiItem(List<TradeApi.ItemId> list) {
         List<TradeDomain.ItemId> domainList = new LinkedList<>();
 
         for(TradeApi.ItemId itemId: list) {
@@ -199,7 +208,8 @@ public class TradeEntityImpl extends TradeEntityInterface {
         return domainList;
     }
 
-    private List<TradeApi.ItemId> convertItemDomain(List<TradeDomain.ItemId> list) {
+    // convert list of tradedomain itemid to list of tradeapi itemid
+    private List<TradeApi.ItemId> convertDomainItem(List<TradeDomain.ItemId> list) {
         List<TradeApi.ItemId> domainList = new LinkedList<>();
 
         for(TradeDomain.ItemId itemId: list) {
