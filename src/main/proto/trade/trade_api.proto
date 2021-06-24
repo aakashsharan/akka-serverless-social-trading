@@ -17,7 +17,15 @@ message CreateTradeItem {
   repeated ItemId seller_item_ids = 5;
 }
 
-message TradeItem {
+message AcceptTradeItem {
+  string trade_id = 1 [(akkaserverless.field).entity_key = true];
+}
+
+message RejectTradeItem {
+  string trade_id = 1 [(akkaserverless.field).entity_key = true];
+}
+
+message GetTradeItem {
   string trade_id = 1 [(akkaserverless.field).entity_key = true];
 }
 
@@ -53,15 +61,15 @@ service TradeService {
     };
   }
 
-  rpc AcceptTrade(TradeItem) returns (google.protobuf.Empty) {
+  rpc AcceptTrade(AcceptTradeItem) returns (google.protobuf.Empty) {
     option (google.api.http).post = "/trade/{trade_id}/accept";
   }
 
-  rpc RejectTrade(TradeItem) returns (google.protobuf.Empty) {
+  rpc RejectTrade(RejectTradeItem) returns (google.protobuf.Empty) {
     option (google.api.http).post = "/trade/{trade_id}/reject";
   }
 
-  rpc GetTrade(TradeItem) returns (Trade) {
+  rpc GetTrade(GetTradeItem) returns (Trade) {
     option (google.api.http) = {
       get: "/trade/{trade_id}"
     };

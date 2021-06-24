@@ -33,17 +33,17 @@ public class TradeEntityImpl extends TradeEntityInterface {
     }
     
     @Override
-    protected Empty acceptTrade(TradeApi.TradeItem command, CommandContext ctx) {
+    protected Empty acceptTrade(TradeApi.AcceptTradeItem command, CommandContext ctx) {
         throw ctx.fail("The command handler for `AcceptTrade` is not implemented, yet");
     }
     
     @Override
-    protected Empty rejectTrade(TradeApi.TradeItem command, CommandContext ctx) {
+    protected Empty rejectTrade(TradeApi.RejectTradeItem command, CommandContext ctx) {
         throw ctx.fail("The command handler for `RejectTrade` is not implemented, yet");
     }
     
     @Override
-    protected TradeApi.Trade getTrade(TradeApi.TradeItem command, CommandContext ctx) {
+    protected TradeApi.Trade getTrade(TradeApi.GetTradeItem command, CommandContext ctx) {
         throw ctx.fail("The command handler for `GetTrade` is not implemented, yet");
     }
     
