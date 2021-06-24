@@ -56,14 +56,11 @@ public class TradeEntityImpl extends TradeEntityInterface {
         bd.addAllBuyerItemIds(newBuyerList);
         bd.addAllSellerItemIds(newSellerList);
 
-        LOG.info("HEREEEEEEEEEEEE");
-
         TradeDomain.TradeOffered tradeOffered = bd.setTradeId(command.getTradeId())
                 .setBuyerUserId(command.getBuyerUserId())
                 .setSellerUserId(command.getSellerUserId())
                 .build();
 
-        LOG.info("HEREEEEEEEEEEEE222222");
         ctx.emit(tradeOffered);
         return Empty.getDefaultInstance();
     }
