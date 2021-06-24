@@ -64,18 +64,6 @@ public class TradeEntityImpl extends TradeEntityInterface {
         ctx.emit(tradeOffered);
         return Empty.getDefaultInstance();
     }
-
-    private List<TradeDomain.ItemId> convertItem(List<TradeApi.ItemId> list) {
-        List<TradeDomain.ItemId> domainList = new LinkedList<>();
-
-        for(TradeApi.ItemId itemId: list) {
-            String id = itemId.getItemId();
-
-            TradeDomain.ItemId.Builder bd = TradeDomain.ItemId.newBuilder().setItemId(id);
-            domainList.add(bd.build());
-        }
-        return domainList;
-    }
     
     @Override
     protected Empty acceptTrade(TradeApi.AcceptTradeItem command, CommandContext ctx) {
@@ -158,23 +146,18 @@ public class TradeEntityImpl extends TradeEntityInterface {
 
     // create a builder for tradedomain trade
     private TradeDomain.TradeState.Builder createBuilder() {
+        TradeDomain.TradeState.Builder bd = TradeDomain.TradeState.newBuilder();
         List<TradeApi.ItemId> buyerList = trade.getBuyerItemIdsList();
         List<TradeApi.ItemId> sellerList = trade.getSellerItemIdsList();
-        int i = 0, j = 0;
-        TradeDomain.TradeState.Builder bd = TradeDomain.TradeState.newBuilder();
 
-        for(TradeApi.ItemId id: buyerList) {
-            TradeDomain.ItemId.Builder item = TradeDomain.ItemId.newBuilder();
-            bd.setBuyerItemIds(i, item.setItemId(id.getItemId()));
-            i++;
-        }
+        LOG.info("buyer list length: {}", buyerList.size());
+        LOG.info("seller list length: {}", sellerList.size());
 
-        for(TradeApi.ItemId id: sellerList) {
-            TradeDomain.ItemId.Builder item = TradeDomain.ItemId.newBuilder();
-            bd.setSellerItemIds(j, item.setItemId(id.getItemId()));
-            j++;
-        }
+        List<TradeDomain.ItemId> newBuyerList = convertItem(buyerList);
+        List<TradeDomain.ItemId> newSellerList = convertItem(sellerList);
 
+        bd.addAllBuyerItemIds(newBuyerList);
+        bd.addAllSellerItemIds(newSellerList);
         return bd;
     }
 
@@ -191,23 +174,42 @@ public class TradeEntityImpl extends TradeEntityInterface {
 
     // create a builder for tradeapi trade
     private TradeApi.Trade.Builder createBuilder(TradeDomain.TradeState trade) {
-        List<TradeDomain.ItemId> buyersList = trade.getBuyerItemIdsList();
-        List<TradeDomain.ItemId> sellersList = trade.getSellerItemIdsList();
-        int i = 0, j = 0;
         TradeApi.Trade.Builder bd = TradeApi.Trade.newBuilder();
+        List<TradeDomain.ItemId> buyerList = trade.getBuyerItemIdsList();
+        List<TradeDomain.ItemId> sellerList = trade.getSellerItemIdsList();
 
-        for(TradeDomain.ItemId id: buyersList) {
-            TradeApi.ItemId.Builder item = TradeApi.ItemId.newBuilder();
-            bd.setBuyerItemIds(i, item.setItemId(id.getItemId()));
-            i++;
-        }
+        LOG.info("buyer list length: {}", buyerList.size());
+        LOG.info("seller list length: {}", sellerList.size());
 
-        for(TradeDomain.ItemId id: sellersList) {
-            TradeApi.ItemId.Builder item = TradeApi.ItemId.newBuilder();
-            bd.setSellerItemIds(j, item.setItemId(id.getItemId()));
-            j++;
-        }
+        List<TradeApi.ItemId> newBuyerList = convertItemDomain(buyerList);
+        List<TradeApi.ItemId> newSellerList = convertItemDomain(sellerList);
 
+        bd.addAllBuyerItemIds(newBuyerList);
+        bd.addAllSellerItemIds(newSellerList);
         return bd;
+    }
+
+    private List<TradeDomain.ItemId> convertItem(List<TradeApi.ItemId> list) {
+        List<TradeDomain.ItemId> domainList = new LinkedList<>();
+
+        for(TradeApi.ItemId itemId: list) {
+            String id = itemId.getItemId();
+
+            TradeDomain.ItemId.Builder bd = TradeDomain.ItemId.newBuilder().setItemId(id);
+            domainList.add(bd.build());
+        }
+        return domainList;
+    }
+
+    private List<TradeApi.ItemId> convertItemDomain(List<TradeDomain.ItemId> list) {
+        List<TradeApi.ItemId> domainList = new LinkedList<>();
+
+        for(TradeDomain.ItemId itemId: list) {
+            String id = itemId.getItemId();
+
+            TradeApi.ItemId.Builder bd = TradeApi.ItemId.newBuilder().setItemId(id);
+            domainList.add(bd.build());
+        }
+        return domainList;
     }
 }
