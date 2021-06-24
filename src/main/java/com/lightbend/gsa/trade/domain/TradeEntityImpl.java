@@ -85,7 +85,7 @@ public class TradeEntityImpl extends TradeEntityInterface {
         // throw ctx.fail("The command handler for `AcceptTrade` is not implemented, yet");
         String tradeId = command.getTradeId();
         LOG.info("Inside createTrade, trade id is: {}", tradeId);
-        if(tradeId.isEmpty() || !trade.getTradeId().equalsIgnoreCase(tradeId)) {
+        if(trade == null || tradeId.isEmpty() || !trade.getTradeId().equalsIgnoreCase(tradeId)) {
             throw ctx.fail("Cannot accept a trade " + tradeId + " that is invalid!");
         }
 
@@ -100,7 +100,7 @@ public class TradeEntityImpl extends TradeEntityInterface {
     protected Empty rejectTrade(TradeApi.RejectTradeItem command, CommandContext ctx) {
         // throw ctx.fail("The command handler for `RejectTrade` is not implemented, yet");
         String tradeId = command.getTradeId();
-        if(tradeId.isEmpty() || !trade.getTradeId().equalsIgnoreCase(tradeId)) {
+        if(trade == null || tradeId.isEmpty() || !trade.getTradeId().equalsIgnoreCase(tradeId)) {
             throw ctx.fail("Cannot reject a trade " + tradeId + " that is invalid!");
         }
         TradeDomain.TradeRejected.Builder bd = TradeDomain.TradeRejected.newBuilder();
