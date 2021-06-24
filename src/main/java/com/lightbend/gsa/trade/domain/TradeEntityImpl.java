@@ -18,7 +18,6 @@ public class TradeEntityImpl extends TradeEntityInterface {
     @SuppressWarnings("unused")
     private final String entityId;
     private TradeApi.Trade trade;
-    private TradeDomain.TradeState state;
     
     public TradeEntityImpl(@EntityId String entityId) {
         this.entityId = entityId;
@@ -28,14 +27,13 @@ public class TradeEntityImpl extends TradeEntityInterface {
     public TradeDomain.TradeState snapshot() {
         // TODO: produce state snapshot here
         //return TradeDomain.TradeState.newBuilder().build();
-        state = convert();
-        return state;
+        return convert();
     }
     
     @Override
     public void handleSnapshot(TradeDomain.TradeState snapshot) {
         // TODO: restore state from snapshot here
-        this.trade = convert(state);
+        this.trade = convert(snapshot);
     }
     
     @Override
