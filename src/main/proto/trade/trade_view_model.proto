@@ -74,7 +74,7 @@ service TradeViewService {
 
   rpc GetTradeByUserId(GetUserId) returns (TradeViewState) {
     option (akkaserverless.method).view.query = {
-      query: "select * from trade_by_user where buyer_user_id = :user_id"
+      query: "select * from trade_by_user where buyer_user_id = :user_id or seller_user_id = :user_id"
     };
     option (google.api.http) = {
       get: "/trades/trade-by-user-id"
