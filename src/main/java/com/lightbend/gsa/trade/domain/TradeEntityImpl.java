@@ -46,7 +46,8 @@ public class TradeEntityImpl extends TradeEntityInterface {
         List<TradeDomain.ItemId> domainSellerList = convertApiItem(apiSellerList);
         bd.addAllBuyerItemIds(domainBuyerList);
         bd.addAllSellerItemIds(domainSellerList);
-        bd.setTradeId(command.getTradeId());
+        bd.setTradeId(command.getTradeId()).setBuyerUserId(command.getBuyerUserId())
+                .setSellerUserId(command.getSellerUserId());
         TradeDomain.TradeOffered tradeOffered = bd.build();
 
         // emit trade offered event
@@ -104,7 +105,6 @@ public class TradeEntityImpl extends TradeEntityInterface {
         return bd.setTradeId(trade.getTradeId())
                 .setBuyerUserId(trade.getBuyerUserId())
                 .setSellerUserId(trade.getSellerUserId())
-                .setStatusValue(trade.getStatusValue())
                 .setTradeOfferedTimestamp(trade.getTradeOfferedTimestamp())
                 .setStatus(trade.getStatus())
                 .build();
@@ -121,13 +121,13 @@ public class TradeEntityImpl extends TradeEntityInterface {
         List<TradeApi.ItemId> apiSellerList = convertDomainItem(domainSellerList);
 
         // update the state of the trade
-        trade = trade.toBuilder().setStatus(TradeApi.Trade.Status.CREATED)
+        trade = trade.toBuilder().setTradeId(event.getTradeId())
                 .addAllBuyerItemIds(apiBuyerList)
                 .addAllSellerItemIds(apiSellerList)
-                .setTradeId(event.getTradeId())
                 .setBuyerUserId(event.getBuyerUserId())
                 .setSellerUserId(event.getSellerUserId())
                 .setTradeOfferedTimestamp(System.currentTimeMillis())
+                .setStatus(TradeApi.Trade.Status.CREATED)
                 .build();
     }
     
