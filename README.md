@@ -1,17 +1,37 @@
 # social-trading-app
 
+## Details
+Building social trading app as part of Akka Serverless Hackathon. ```Architecture will be added later```
+This repository contains the Trade Service. Trade has the following properties:
 
-## Designing
+#### State
+trade_id (string) </br>
+buyer_user_id(string)</br>
+seller_user_id(string)</br>
+buyer_item_ids(string list)</br>
+seller_item_ids(string list)</br>
+trade_offered_timestamp(int64)</br>
+status[CREATED, ACCEPTED, REJECTED)</br>
 
-While designing your service it is useful to read [designing services](https://developer.lightbend.com/docs/akka-serverless/designing/index.html)
+#### Command
+CreateTrade</br>
+AcceptTrade</br>
+RejectTrade</br>
+GetTrade</br>
 
+#### Event
+TradeOffered</br>
+TradeAccepted</br>
+TradeRejected</br>
 
-## Developing
+#### Eventing (Publish)
+TradeOffered</br>
+TradeAccepted</br>
+TradeRejected</br>
 
-This project has a bare-bones skeleton service ready to go, but in order to adapt and
-extend it it may be useful to read up on [developing services](https://developer.lightbend.com/docs/akka-serverless/developing/index.html)
-and in particular the [Java section](https://developer.lightbend.com/docs/akka-serverless/java-services/index.html)
-
+#### View
+getTradeByUser
++ Query: select* from trade_by_user where user_id = :user_id
 
 ## Building
 
@@ -48,37 +68,586 @@ To start the application locally, the `exec-maven-plugin` is used. Use the follo
 mvn compile exec:java
 ```
 
-With both the proxy and your application running, any defined endpoints should be available at `http://localhost:9000`. In addition to the defined gRPC interface, each method has a corresponding HTTP endpoint. Unless configured otherwise (see [Transcoding HTTP](https://docs.lbcs.dev/js-services/proto.html#_transcoding_http)), this endpoint accepts POST requests at the path `/[package].[entity name]/[method]`. For example, using `curl`:
+## Exercise the service - Locally
 
+### Note - You can also directly use http call to do the same actions. For example to get the cart: localhost:9000/carts/3232
+
+#### Create a trade
 ```
-> curl -XPOST -H "Content-Type: application/json" localhost:9000/com.lightbend.gsa.CounterService/GetCurrentCounter -d '{"counterId": "foo"}'
-The command handler for `GetCurrentCounter` is not implemented, yet
-```
-
-For example, given [`grpcurl`](https://github.com/fullstorydev/grpcurl):
-
-```shell
-> grpcurl -plaintext -d '{"counterId": "foo"}' localhost:9000 com.lightbend.gsa.CounterService/GetCurrentCounter 
-ERROR:
-  Code: Unknown
-  Message: The command handler for `GetCurrentCounter` is not implemented, yet
+grpcurl \
+  -d '{"tradeId": "1212", "buyerUserId": "3", "sellerUserId": "5", "buyerItemIds" : [{"itemId" : "1"}, {"itemId" : "2"}], "sellerItemIds" : [{"itemId" : "10"}, {"itemId" : "12"}]}' \
+  -plaintext localhost:9000 \
+  com.lightbend.gsa.trade.TradeService.CreateTrade
 ```
 
-> Note: The failure is to be expected if you have not yet provided an implementation of `GetCurrentCounter` in
-> your entity.
+Output:
+
+```json
+{
+
+}
+```
+
+#### Get the trade
+```
+grpcurl \
+  -d '{"tradeId": "1212"}' \
+  -plaintext localhost:9000 \
+  com.lightbend.gsa.trade.TradeService.GetTrade
+```
+
+Output:
+
+```json
+{
+  "trade_id": "1212",
+  "buyer_user_id": "3",
+  "seller_user_id": "5",
+  "buyer_item_ids": [
+    {
+      "item_id": "1"
+    },
+    {
+      "item_id": "2"
+    }
+  ],
+  "seller_item_ids": [
+    {
+      "item_id": "10"
+    },
+    {
+      "item_id": "12"
+    }
+  ],
+  "trade_offered_timestamp": "1624642878834"
+}
+```
 
 
-## Deploying
+#### Accept the trade
+```
+grpcurl \
+  -d '{"tradeId": "1212"}' \
+  -plaintext localhost:9000 \
+  com.lightbend.gsa.trade.TradeService.AcceptTrade
+```
+
+Output:
+
+```json
+{
+
+}
+```
+
+#### Now, get the trade
+```
+grpcurl \
+  -d '{"tradeId": "1212"}' \
+  -plaintext localhost:9000 \
+  com.lightbend.gsa.trade.TradeService.GetTrade
+```
+
+Output:
+
+```json
+{
+  "trade_id": "1212",
+  "buyer_user_id": "3",
+  "seller_user_id": "5",
+  "buyer_item_ids": [
+    {
+      "item_id": "1"
+    },
+    {
+      "item_id": "2"
+    }
+  ],
+  "seller_item_ids": [
+    {
+      "item_id": "10"
+    },
+    {
+      "item_id": "12"
+    }
+  ],
+  "trade_offered_timestamp": "1624642920511",
+  "status": "ACCEPTED"
+}
+```
+
+#### Create a trade
+```
+grpcurl \
+  -d '{"tradeId": "113", "buyerUserId": "1", "sellerUserId": "3", "buyerItemIds" : [{"itemId" : "8"}, {"itemId" : "11"}], "sellerItemIds" : [{"itemId" : "2"}, {"itemId" : "6"}]}' \
+  -plaintext localhost:9000 \
+  com.lightbend.gsa.trade.TradeService.CreateTrade
+```
+
+Output:
+
+```json
+{
+
+}
+```
+
+#### Get the trade
+```
+grpcurl \
+  -d '{"tradeId": "113"}' \
+  -plaintext localhost:9000 \
+  com.lightbend.gsa.trade.TradeService.GetTrade
+```
+
+Output:
+
+```json
+{
+  "trade_id": "113",
+  "buyer_user_id": "1",
+  "seller_user_id": "3",
+  "buyer_item_ids": [
+    {
+      "item_id": "8"
+    },
+    {
+      "item_id": "11"
+    }
+  ],
+  "seller_item_ids": [
+    {
+      "item_id": "2"
+    },
+    {
+      "item_id": "6"
+    }
+  ],
+  "trade_offered_timestamp": "1624643005560"
+}
+```
+
+
+#### Reject the trade
+```
+grpcurl \
+  -d '{"tradeId": "113"}' \
+  -plaintext localhost:9000 \
+  com.lightbend.gsa.trade.TradeService.RejectTrade
+```
+
+Output:
+
+```json
+{
+
+}
+```
+
+#### Now, get the trade
+```
+grpcurl \
+  -d '{"tradeId": "113"}' \
+  -plaintext localhost:9000 \
+  com.lightbend.gsa.trade.TradeService.GetTrade
+```
+
+Output:
+
+```json
+{
+  "trade_id": "113",
+  "buyer_user_id": "1",
+  "seller_user_id": "3",
+  "buyer_item_ids": [
+    {
+      "item_id": "8"
+    },
+    {
+      "item_id": "11"
+    }
+  ],
+  "seller_item_ids": [
+    {
+      "item_id": "2"
+    },
+    {
+      "item_id": "6"
+    }
+  ],
+  "trade_offered_timestamp": "1624643005560",
+  "status": "REJECTED"
+}
+```
+
+#### Now, get the trade on buyer id
+```
+grpcurl \
+  -d '{"userId": "1"}' \
+  -plaintext localhost:9000 \
+  com.lightbend.gsa.trade.view.TradeViewService.GetTradeByUserId
+```
+
+Output:
+
+```json
+{
+  "trade_id": "113",
+  "buyer_user_id": "1",
+  "seller_user_id": "3",
+  "buyer_item_ids": [
+    {
+      "item_id": "8"
+    },
+    {
+      "item_id": "11"
+    }
+  ],
+  "seller_item_ids": [
+    {
+      "item_id": "2"
+    },
+    {
+      "item_id": "6"
+    }
+  ],
+  "trade_offered_timestamp": "1624643005571",
+  "status": "REJECTED"
+}
+```
+
+#### Now, get the trade on seller id
+```
+grpcurl \
+  -d '{"userId": "5"}' \
+  -plaintext localhost:9000 \
+  com.lightbend.gsa.trade.view.TradeViewService.GetTradeByUserId
+```
+
+Output:
+
+```json
+{
+  "trade_id": "1212",
+  "buyer_user_id": "3",
+  "seller_user_id": "5",
+  "buyer_item_ids": [
+    {
+      "item_id": "1"
+    },
+    {
+      "item_id": "2"
+    }
+  ],
+  "seller_item_ids": [
+    {
+      "item_id": "10"
+    },
+    {
+      "item_id": "12"
+    }
+  ],
+  "trade_offered_timestamp": "1624643493608",
+  "status": "ACCEPTED"
+}
+```
+
+
+## Deploying - to Akka Serverless
 
 To deploy your service, install the `akkasls` CLI as documented in
-[Setting up a local development environment](https://developer.lightbend.com/docs/akka-serverless/getting-started/set-up-development-env.html)
-and configure a Docker Registry to upload your docker image to.
 
-You will need to update the `akkasls.dockerImage` property in the `pom.xml` and refer to
-[Configuring registries](https://developer.lightbend.com/docs/akka-serverless/deploying/registries.html)
-for more information on how to make your docker image available to Akka Serverless.
+#### To skip tests:
 
-Finally you can or use the [Akka Serverless Console](https://console.akkaserverless.com)
-to create a project and then deploy your service into the project either by using `mvn deploy`,
-through the `akkasls` CLI or via the web interface. When using `mvn deploy`, Maven will also
-conveniently package and publish your docker image prior to deployment.
+```
+mvn clean install -Dmaven.test.skip=true
+```
+
+#### else
+
+```
+mvn clean install
+```
+
+#### Push the image to the repository:
+```
+docker push {docker-username}/{project-name}
+```
+
+#### Authorize akka serverless:
+```
+akkasls auth login
+```
+
+#### Set the project:
+```
+akkasls config set project <project-name>
+```
+
+#### Deploy the service to akka serverless
+```
+akkasls services deploy <servicename> docker.io/{docker-username}/{project-name}
+```
+
+#### Expose the service
+```
+akkasls service expose <servicename> --enable-cors
+```
+
+Output:
+```
+Service <servicename> was successfully exposed at: exampleABCD.us-east1.apps.akkaserverless.io
+```
+
+## Exercise the example - Service exposed on Akka Serverless
+
+#### Create a trade
+```
+grpcurl -d '{"tradeId": "1212", "buyerUserId": "3", "sellerUserId": "5", "buyerItemIds" : [{"itemId" : "1"}, {"itemId" : "2"}], "sellerItemIds" : [{"itemId" : "10"}, {"itemId" : "12"}]}' exampleABCD.us-east1.apps.akkaserverless.io:443 com.lightbend.gsa.trade.TradeService.CreateTrade
+```
+
+Output:
+
+```json
+{
+
+}
+```
+
+#### Get the trade
+```
+grpcurl -d '{"tradeId": "1212"}' exampleABCD.us-east1.apps.akkaserverless.io:443 com.lightbend.gsa.trade.TradeService.GetTrade
+```
+
+Output:
+
+```json
+{
+  "trade_id": "1212",
+  "buyer_user_id": "3",
+  "seller_user_id": "5",
+  "buyer_item_ids": [
+    {
+      "item_id": "1"
+    },
+    {
+      "item_id": "2"
+    }
+  ],
+  "seller_item_ids": [
+    {
+      "item_id": "10"
+    },
+    {
+      "item_id": "12"
+    }
+  ],
+  "trade_offered_timestamp": "1624645398129"
+}
+```
+
+
+#### Accept the trade
+```
+grpcurl -d '{"tradeId": "1212"}' exampleABCD.us-east1.apps.akkaserverless.io:443 com.lightbend.gsa.trade.TradeService.AcceptTrade
+```
+
+Output:
+
+```json
+{
+
+}
+```
+
+#### Now, get the trade
+```
+grpcurl -d '{"tradeId": "1212"}' exampleABCD.us-east1.apps.akkaserverless.io:443 com.lightbend.gsa.trade.TradeService.GetTrade
+```
+
+Output:
+
+```json
+{
+  "trade_id": "1212",
+  "buyer_user_id": "3",
+  "seller_user_id": "5",
+  "buyer_item_ids": [
+    {
+      "item_id": "1"
+    },
+    {
+      "item_id": "2"
+    }
+  ],
+  "seller_item_ids": [
+    {
+      "item_id": "10"
+    },
+    {
+      "item_id": "12"
+    }
+  ],
+  "trade_offered_timestamp": "1624645457811",
+  "status": "ACCEPTED"
+}
+```
+
+#### Create a trade
+```
+grpcurl -d '{"tradeId": "113", "buyerUserId": "1", "sellerUserId": "3", "buyerItemIds" : [{"itemId" : "8"}, {"itemId" : "11"}], "sellerItemIds" : [{"itemId" : "2"}, {"itemId" : "6"}]}' exampleABCD.us-east1.apps.akkaserverless.io:443 com.lightbend.gsa.trade.TradeService.CreateTrade
+```
+
+
+Output:
+
+```json
+{
+
+}
+```
+
+#### Get the trade
+```
+grpcurl -d '{"tradeId": "113"}' exampleABCD.us-east1.apps.akkaserverless.io:443 com.lightbend.gsa.trade.TradeService.GetTrade
+```
+
+Output:
+
+```json
+{
+  "trade_id": "113",
+  "buyer_user_id": "1",
+  "seller_user_id": "3",
+  "buyer_item_ids": [
+    {
+      "item_id": "8"
+    },
+    {
+      "item_id": "11"
+    }
+  ],
+  "seller_item_ids": [
+    {
+      "item_id": "2"
+    },
+    {
+      "item_id": "6"
+    }
+  ],
+  "trade_offered_timestamp": "1624645631208"
+}
+```
+
+
+#### Reject the trade
+```
+grpcurl -d '{"tradeId": "113"}' exampleABCD.us-east1.apps.akkaserverless.io:443 com.lightbend.gsa.trade.TradeService.RejectTrade
+```
+
+Output:
+
+```json
+{
+
+}
+```
+
+#### Now, get the trade
+```
+grpcurl -d '{"tradeId": "113"}' exampleABCD.us-east1.apps.akkaserverless.io:443 com.lightbend.gsa.trade.TradeService.GetTrade
+```
+
+Output:
+
+```json
+{
+  "trade_id": "113",
+  "buyer_user_id": "1",
+  "seller_user_id": "3",
+  "buyer_item_ids": [
+    {
+      "item_id": "8"
+    },
+    {
+      "item_id": "11"
+    }
+  ],
+  "seller_item_ids": [
+    {
+      "item_id": "2"
+    },
+    {
+      "item_id": "6"
+    }
+  ],
+  "trade_offered_timestamp": "1624645678491",
+  "status": "REJECTED"
+}
+```
+
+#### Now, get the trade on buyer id
+```
+grpcurl -d '{"userId": "1"}' exampleABCD.us-east1.apps.akkaserverless.io:443 com.lightbend.gsa.trade.view.TradeViewService.GetTradeByUserId
+```
+
+Output:
+
+```json
+{
+  "trade_id": "113",
+  "buyer_user_id": "1",
+  "seller_user_id": "3",
+  "buyer_item_ids": [
+    {
+      "item_id": "8"
+    },
+    {
+      "item_id": "11"
+    }
+  ],
+  "seller_item_ids": [
+    {
+      "item_id": "2"
+    },
+    {
+      "item_id": "6"
+    }
+  ],
+  "trade_offered_timestamp": "1624645600890",
+  "status": "REJECTED"
+}
+```
+
+#### Now, get the trade on seller id
+```
+grpcurl -d '{"userId": "5"}' exampleABCD.us-east1.apps.akkaserverless.io:443 com.lightbend.gsa.trade.view.TradeViewService.GetTradeByUserId
+```
+
+Output:
+
+```json
+{
+  "trade_id": "1212",
+  "buyer_user_id": "3",
+  "seller_user_id": "5",
+  "buyer_item_ids": [
+    {
+      "item_id": "1"
+    },
+    {
+      "item_id": "2"
+    }
+  ],
+  "seller_item_ids": [
+    {
+      "item_id": "10"
+    },
+    {
+      "item_id": "12"
+    }
+  ],
+  "trade_offered_timestamp": "1624645328653",
+  "status": "ACCEPTED"
+}
+```
